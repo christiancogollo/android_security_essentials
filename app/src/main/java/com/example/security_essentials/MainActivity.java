@@ -1,6 +1,8 @@
 package com.example.security_essentials;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,21 +21,28 @@ import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.KeySpec;
+import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 
 public class MainActivity extends AppCompatActivity {
-    static String llavesparaencriptar = "012345678ABCDEFG";
+    static String llavesparaencriptar = "01234567abcdefgh";
+    static String newllavesparaencriptar = "PBKDF2WithHmacSHA256";
     private static SecretKeySpec secret;
     private FirebaseAuth mAuth;
     byte[] cifrado = new byte[0];
     String decifrado;
+    private static String salt = "ssshhhhhhhhhhh!!!!";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mAuth = FirebaseAuth.getInstance();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
 
         Button btnlogin = (Button) findViewById(R.id.IdLogin);
         btnlogin.setOnClickListener(new View.OnClickListener() {
@@ -57,11 +65,21 @@ public class MainActivity extends AppCompatActivity {
                 if(password.getText().toString().isEmpty()){
                     Toast.makeText(MainActivity.this, "Digite El Campo Password", Toast.LENGTH_LONG).show();
                 }else{
-                   // Intent cambio = new Intent(MainActivity.this, Principal.class);
-                   // startActivity(cambio);
+                    String newcifrado = encrypt(password.getText().toString(), llavesparaencriptar) ;
+                    String newdecifrado = decrypt(newcifrado, llavesparaencriptar) ;
+                    singIn(correo.getText().toString(), decifrado);
 
+                    SharedPreferences preferencias=getSharedPreferences("datos", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor=preferencias.edit();
+                    editor.putBoolean("isValid",true);
+                    editor.putString("correo", correo.getText().toString());
+                    editor.putString("contraseña", password.getText().toString());
+                    editor.commit();
+                    String mail=preferencias.getString("correo","");
+                    /*
                     try{
-                        cifrado = encryptMsg(correo.getText().toString(), generateKey());
+                        //SecretKey secret = generateKey();
+                        cifrado = encryptMsg(password.getText().toString(), generateKey());
                         decifrado = decrryptMsg(cifrado, generateKey());
                         singIn(correo.getText().toString(), decifrado);
 
@@ -77,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     } catch (IllegalBlockSizeException e) {
                         e.printStackTrace();
-                    }
+                    }*/
 
                 }
             }
@@ -136,6 +154,52 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(cambio);
             }
         });
+    }
+
+    ///////////////////////////////////  Nuevos Metodos ///////////////////////////////////////////
+
+    public static String encrypt(String password, String secret)
+    {
+        try
+        {
+            byte[] iv =  new byte[0];
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(newllavesparaencriptar);
+            KeySpec spec = new PBEKeySpec(secret.toCharArray(), salt.getBytes(), 65536, 256);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivspec);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(password.getBytes("UTF-8")));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error mientras se encripta: " + e.toString());
+        }
+        return null;
+    }
+
+    public static String decrypt(String password, String secret){
+        try
+        {
+            byte[] iv = new byte[0];
+            IvParameterSpec ivspec = new IvParameterSpec(iv);
+
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(newllavesparaencriptar);
+            KeySpec spec = new PBEKeySpec(secret.toCharArray(), salt.getBytes(), 65536, 256);
+            SecretKey tmp = factory.generateSecret(spec);
+            SecretKeySpec secretKey = new SecretKeySpec(tmp.getEncoded(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivspec);
+            return new String(cipher.doFinal(Base64.getDecoder().decode(password)));
+        }
+        catch (Exception e) {
+            System.out.println("Error mientras se desecncripta: " + e.toString());
+        }
+        return null;
     }
 
     private void signOut() {
