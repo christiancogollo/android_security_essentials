@@ -34,8 +34,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import javax.crypto.spec.IvParameterSpec;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences;
+
 
 
 public class Register extends AppCompatActivity {
@@ -46,6 +45,11 @@ public class Register extends AppCompatActivity {
     String decifrado;
     private FirebaseAuth mAuth;
     private static String salt = "ssshhhhhhhhhhh!!!!";
+
+    static String sqlname = "christian";
+    static String sqlmail = "christian.cogollo@cecar.edu.co";
+    static String sqluuid = "1000";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +118,10 @@ public class Register extends AppCompatActivity {
                             Log.d("TAG", "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 
+                            //Sqlite
+                            DBHelper miHelper = new DBHelper(getApplicationContext());
+                            miHelper.insertRow(sqlname,sqlmail,sqluuid);
+
                             Intent cambio = new Intent(Register.this, MainActivity.class);
                             startActivity(cambio);
                         } else {
@@ -124,6 +132,7 @@ public class Register extends AppCompatActivity {
                 });
     }
 
+    /////////////////////////////////////Primeros Metodos///////////////////////////////////////
     public static SecretKey generateKey()throws NoSuchAlgorithmException, InvalidKeyException{
         return secret = new SecretKeySpec(llavesparaencriptar.getBytes(),"AES");
     }

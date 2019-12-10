@@ -205,5 +205,40 @@ public class MainActivity extends AppCompatActivity {
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
     }
+/*
+    private createFile(String userName, String userUuid, String userEmail){
+
+        try{
+            String TESTSTRING = userName +","+ userUuid +","+ userEmail
+            String fUot = openFileOutput("user.txt", Context.MODE_PRIVATE)
+            String osw = OutputStreamWriter(fUot)
+            osw.write(TESTSTRING)
+            osw.flush()
+            osw.close()
+
+
+        }catch (ioe: IOException ){
+            ioe.printStackTrace()
+        }
+
+    }
+
+    private readFile(){
+
+        try {
+
+            val fIn = openFileInput("user.txt")
+            val isr = InputStreamReader(fIn)
+            val inputBuffer =  charArrayOf()
+            isr.read()
+            val readString = String(inputBuffer)
+            print(readString)
+
+        }catch (ioe: IOException ){
+            ioe.printStackTrace()
+        }
+
+    }
+*/
 
 }
